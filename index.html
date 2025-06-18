@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>🍔 SSSHBites Order</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <style>
+    body { font-family:'Poppins',sans-serif; background:linear-gradient(135deg,#fefcea 0,#ffe6fa 100%); }
+    .cute-card{background:#fffbe8;border-radius:16px;box-shadow:0 2px 10px #fae5d3;padding:1.4rem 1.2rem;margin-bottom:1.1rem;}
+    .menu-title{font-size:1.13rem;font-weight:600;color:#d35400;}
+    .price{color:#44bd32;font-weight:600;}
+    .btn-kawaii{background:#fdcb6e;color:#fff;border:none;border-radius:8px;font-weight:600;}
+    .btn-kawaii:hover{background:#e17055;}
+    .cart-card{background:#fffdfc;border-radius:16px;box-shadow:0 2px 10px #fae5d3;padding:1.2rem 1rem;}
+    .cart-row{display:flex;justify-content:space-between;align-items:center;font-size:1rem;border-bottom:1px dashed #f6e58d;padding:.35rem 0;}
+    .cart-del{background:#ffe6e6;border:none;border-radius:50%;color:#d63031;width:24px;height:24px;}
+    .cart-del:hover{background:#d63031;color:#fff;}
+    .order-success{background:#dff9fb;color:#22a6b3;border-radius:8px;padding:.6em 1em;text-align:center;font-weight:600;}
+    .admin-login{position:fixed;top:18px;right:24px;font-size:1rem;z-index:10;}
+    .admin-login button{background:#fffbe8;color:#d35400;border:none;border-radius:8px;padding:.4em 1.1em;font-weight:600;}
+    .admin-login button:hover{background:#fdcb6e;color:#fff;}
+  </style>
+</head>
+<body class="container py-3">
+  <div class="admin-login"><button onclick="showAdminLogin()">👩‍💼 Admin</button></div>
+  <h2 class="text-center mb-2">🍔 SSSHBites 🍟</h2>
+  <div class="text-center mb-3" style="color:#636e72;">Pick your food, see your order below, and enjoy!</div>
+  <div class="mb-3" style="max-width:300px;margin:auto;">
+    <select class="form-select" id="tableNumber">
+      <option>Table 1</option><option>Table 2</option><option>Table 3</option>
+    </select>
+  </div>
+  <div id="orderMsg"></div>
+  <div id="menu"></div>
+  <div id="cartBox" class="cart-card mt-4" style="display:none;">
+    <div class="mb-2" style="font-weight:600;color:#d35400;">🛒 Your Order</div>
+    <div id="cart"></div>
+    <div class="text-end mb-1">Total: <span id="total" class="price">0.00</span></div>
+    <button class="btn btn-kawaii w-100" onclick="placeOrder()">Place Order</button>
+  </div>
+  <!-- Admin Login Modal -->
+  <div class="modal fade" id="adminModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Admin Login</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <input type="text" id="adminUser" class="form-control mb-2" placeholder="Username">
+        <input type="password" id="adminPass" class="form-control mb-2" placeholder="Password">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-kawaii" onclick="adminLogin()">Login</button>
+      </div>
+    </div></div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const API='https://localhost:44370';let cart=[];
+    fetch(API+'/menu').then(r=>r.json()).then(d=>{
+      let h='';d.forEach(i=>{
+        h+=`<div class="cute-card">
+          <div class="menu-title">${i.name}</div>
+          <div style="color:#636e72;">${i.description||''}</div>
+          <div class="mb-2 price">RM${i.price.toFixed(2)}</div>
+          <div class="d-flex align-items-center">
+            <input type="number" min="1" value="1" id="q${i.id}" style="width:50px;" class="form-control me-2"/>
+            <button class="btn btn-kawaii" onclick="addItem(${i.id},'${i.name.replace(/'/g,"\\'")}',${i.price})">Add</button>
+          </div>
+        </div>`;
+      });document.getElementById('menu').innerHTML=h;
+    });
+    function addItem(id,n,p){
+      let q=parseInt(document.getElementById('q'+id).value)||1;
+      let f=cart.find(x=>x.id===id);
+      if(f)f.q+=q;else cart.push({id,n,p,q});
+      showCart();
+    }
+    function removeItem(id){
+      cart=cart.filter(x=>x.id!==id);showCart();
+    }
+    function showCart(){
+      let c=document.getElementById('cart'),tot=0;
+      c.innerHTML='';cart.forEach(i=>{
+        let s=i.p*i.q;tot+=s;
+        c.innerHTML+=`<div class="cart-row">
+          <span>${i.n} x${i.q}</span>
+          <span>RM${s.toFixed(2)}</span>
+          <button class="cart-del" onclick="removeItem(${i.id})">✕</button>
+        </div>`;
+      });
+      document.getElementById('total').textContent=tot.toFixed(2);
+      document.getElementById('cartBox').style.display=cart.length?'block':'none';
+      document.getElementById('orderMsg').innerHTML='';
+    }
+    function placeOrder(){
+      if(!cart.length)return;
+      let table=document.getElementById('tableNumber').value;
+      let items=cart.map(i=>({menuItemId:i.id,menuItemName:i.n,quantity:i.q,price:i.p}));
+      fetch(API+'/order',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({customerName:table,customerPhone:'N/A',customerEmail:'',items})})
+      .then(r=>r.json())
+      .then(d=>{
+        cart=[];showCart();
+        document.getElementById('orderMsg').innerHTML=
+          `<div class="order-success">🎉 Order placed!</div>`;
+      });
+    }
+    // Admin login
+    function showAdminLogin(){
+      new bootstrap.Modal(document.getElementById('adminModal')).show();
+    }
+    function adminLogin(){
+      let u=adminUser.value,p=adminPass.value;
+      fetch(API+'/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({username:u,password:p})})
+      .then(r=>{if(!r.ok)throw 0;return r.json()})
+      .then(d=>{localStorage.setItem("admin-token",d.token);location='admin.html'})
+      .catch(()=>alert('Invalid login'));
+    }
+  </script>
+</body>
+</html>
