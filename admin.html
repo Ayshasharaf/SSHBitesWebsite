@@ -1,103 +1,172 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>🍔 SSSHBites Admin</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <style>
-    body{font-family:'Poppins',sans-serif;background:linear-gradient(135deg,#fff7e6,#ffe6fa);}
-    .tab-btn{border:none;background:none;font-size:1.2rem;font-weight:600;padding:.7rem 1.5rem;border-radius:16px;}
-    .tab-btn.active{background:#fdcb6e;color:#fff;}
-    .kawaii-card{border-radius:16px;box-shadow:0 2px 10px #fae5d3;background:#fff;margin-bottom:1.2rem;}
-    .order-badge{border-radius:8px;font-size:0.92rem;padding:.12em .8em;}
-    .badge-pending{background:#f9ca24;color:#fff;}
-    .badge-served{background:#81ecec;color:#0984e3;}
-    .del-btn{background:#ffe6e6;border:none;border-radius:50%;color:#d63031;width:27px;height:27px;}
-    .del-btn:hover{background:#d63031;color:#fff;}
+    body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #fff7e6, #ffe6fa); }
+    .tab-btn { border: none; background: none; font-size: 1.2rem; font-weight: 600; padding: 0.7rem 1.5rem; border-radius: 16px; }
+    .tab-btn.active { background: #fdcb6e; color: #fff; }
+    .kawaii-card { border-radius: 16px; box-shadow: 0 2px 10px #fae5d3; background: #fff; margin-bottom: 1.2rem; }
+    .order-badge { border-radius: 8px; font-size: 0.92rem; padding: 0.12em 0.8em; }
+    .badge-pending { background: #f9ca24; color: #fff; }
+    .badge-served { background: #81ecec; color: #0984e3; }
+    .del-btn { background: #ffe6e6; border: none; border-radius: 50%; color: #d63031; width: 27px; height: 27px; }
+    .del-btn:hover { background: #d63031; color: #fff; }
   </style>
 </head>
 <body class="container py-3">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h3>🍔 SSSHBites Admin</h3>
+    <button onclick="logoutAdmin()" class="btn btn-outline-danger">Logout</button>
   </div>
+
   <div class="mb-4 text-center">
     <button class="tab-btn active" id="ordersTab" onclick="showTab('orders')">🧾 Orders</button>
     <button class="tab-btn" id="menuTab" onclick="showTab('menu')">🍟 Menu Management</button>
   </div>
+
   <!-- ORDERS TAB -->
   <div id="ordersPanel">
+    <div class="kawaii-card p-3 mb-3">
+      <div class="d-flex flex-wrap gap-2">
+        <select id="filterStatus" class="form-select w-auto">
+          <option value="">All Status</option>
+          <option value="Pending">Pending</option>
+          <option value="Served">Served</option>
+        </select>
+        <input id="filterTable" class="form-control w-auto" placeholder="Search table..." />
+        <button onclick="loadOrders()" class="btn btn-warning">Filter</button>
+        <button onclick="loadSummary()" class="btn btn-outline-primary ms-auto">📊 Daily Report</button>
+      </div>
+    </div>
+    <div id="summaryReport" class="mb-3"></div>
     <div id="orders"></div>
   </div>
+
   <!-- MENU TAB -->
   <div id="menuPanel" style="display:none;">
     <div class="kawaii-card p-3 mb-3">
       <h5>🍟 Add Menu Item</h5>
       <form id="menuForm" class="row g-2">
-        <div class="col"><input class="form-control" id="mName" placeholder="Food name" required></div>
-        <div class="col"><input class="form-control" id="mPrice" type="number" placeholder="Price" required min="0"></div>
-        <div class="col"><input class="form-control" id="mDesc" placeholder="Description"></div>
+        <div class="col"><input class="form-control" id="mName" placeholder="Food name" required /></div>
+        <div class="col"><input class="form-control" id="mPrice" type="number" placeholder="Price" required min="0" /></div>
+        <div class="col"><input class="form-control" id="mDesc" placeholder="Description" /></div>
         <div class="col-auto"><button class="btn btn-warning" type="submit">Add</button></div>
       </form>
     </div>
     <div id="menuList"></div>
   </div>
+
   <script>
-    const API='https://foodorderingapi.onrender.com',tok=localStorage.getItem("admin-token");
-    function showTab(tab){
-      document.getElementById("ordersPanel").style.display=tab==='orders'?'block':'none';
-      document.getElementById("menuPanel").style.display=tab==='menu'?'block':'none';
-      document.getElementById("ordersTab").classList.toggle("active",tab==='orders');
-      document.getElementById("menuTab").classList.toggle("active",tab==='menu');
-      if(tab==='menu')loadMenu();
+    const API = 'https://foodorderingapi.onrender.com';
+    const tok = localStorage.getItem("admin-token");
+
+    function showTab(tab) {
+      document.getElementById("ordersPanel").style.display = tab === 'orders' ? 'block' : 'none';
+      document.getElementById("menuPanel").style.display = tab === 'menu' ? 'block' : 'none';
+      document.getElementById("ordersTab").classList.toggle("active", tab === 'orders');
+      document.getElementById("menuTab").classList.toggle("active", tab === 'menu');
+      if (tab === 'menu') loadMenu();
+      if (tab === 'orders') loadOrders();
     }
-    // ORDERS (latest first)
+
     async function loadOrders() {
-      let r=await fetch(`${API}/admin/orders`,{headers:{Authorization:tok}}),d=await r.json();
-      let html='<h5 class="mb-3">🧾 Orders</h5>';
-      d.reverse().forEach(o=>{
-        let items=o.items.map(i=>`${i.menuItemName} x${i.quantity}`).join(', ');
-        html+=`<div class="kawaii-card p-3 mb-2">
-          <b>#${o.id}</b> <span>${o.customerName}</span><br>
-          <small>${items}</small> <br>
-          <span>RM${o.totalAmount.toFixed(2)}</span>
-          <span class="order-badge ${o.status==='Served'?'badge-served':'badge-pending'}">${o.status}</span>
-          ${o.status==='Pending'?`<button class="btn btn-warning btn-sm ms-2" onclick="markServed(${o.id})">Mark Served</button>`:""}
+      let status = document.getElementById("filterStatus")?.value || "";
+      let table = document.getElementById("filterTable")?.value || "";
+      let url = `${API}/admin/orders?status=${status}&table=${table}`;
+
+      let r = await fetch(url, { headers: { Authorization: tok } });
+      let d = await r.json();
+
+      let html = '<h5 class="mb-3">🧾 Orders</h5>';
+      d.reverse().forEach(o => {
+        let items = o.items.map(i => `${i.menuItemName} x${i.quantity}`).join(', ');
+        html += `<div class="kawaii-card p-3 mb-2">
+          <b>#${o.id}</b> - <span>${o.customerName}</span><br>
+          <small>${items}</small><br>
+          <div>RM${o.totalAmount.toFixed(2)} 
+            <span class="order-badge ${o.status === 'Served' ? 'badge-served' : 'badge-pending'}">${o.status}</span>
+            ${o.status === 'Pending' ? `<button class="btn btn-warning btn-sm ms-2" onclick="markServed(${o.id})">Mark Served</button>` : ''}
+          </div>
+          ${o.notes ? `<div><i>Note: ${o.notes}</i></div>` : ''}
+          <div><small>🕒 ${new Date(o.orderDate).toLocaleString()}</small></div>
         </div>`;
       });
-      document.getElementById('orders').innerHTML=html;
+      document.getElementById('orders').innerHTML = html;
     }
+
     async function markServed(id) {
-      await fetch(`${API}/admin/orders/${id}/status`,{method:'PUT',headers:{Authorization:tok}});
+      await fetch(`${API}/admin/orders/${id}/status`, {
+        method: 'PUT',
+        headers: { Authorization: tok }
+      });
       loadOrders();
     }
-    // MENU
+
     async function loadMenu() {
-      let r=await fetch(`${API}/admin/menu`,{headers:{Authorization:tok}}),d=await r.json();
-      let html='<h5>🍔 Menu</h5>';
-      d.forEach(i=>{
-        html+=`<div class="kawaii-card p-2 mb-1 d-flex justify-content-between align-items-center">
-          <span><b>${i.name}</b> – RM${i.price.toFixed(2)} <small>${i.description||''}</small></span>
+      let r = await fetch(`${API}/admin/menu`, { headers: { Authorization: tok } });
+      let d = await r.json();
+      let html = '<h5>🍔 Menu</h5>';
+      d.forEach(i => {
+        html += `<div class="kawaii-card p-2 mb-1 d-flex justify-content-between align-items-center">
+          <span><b>${i.name}</b> – RM${i.price.toFixed(2)} <small>${i.description || ''}</small></span>
           <button class="del-btn" onclick="delMenu(${i.id})">✕</button>
         </div>`;
       });
-      document.getElementById('menuList').innerHTML=html;
+      document.getElementById('menuList').innerHTML = html;
     }
+
     async function delMenu(id) {
-      if(confirm('Delete this menu item?'))
-        await fetch(`${API}/admin/menu/${id}`,{method:'DELETE',headers:{Authorization:tok}});
-      loadMenu();
+      if (confirm('Delete this menu item?')) {
+        await fetch(`${API}/admin/menu/${id}`, {
+          method: 'DELETE',
+          headers: { Authorization: tok }
+        });
+        loadMenu();
+      }
     }
-    document.getElementById('menuForm').onsubmit=async(e)=>{
+
+    document.getElementById('menuForm').onsubmit = async (e) => {
       e.preventDefault();
-      let n=mName.value.trim(),p=parseFloat(mPrice.value),d=mDesc.value.trim();
-      if(!n||isNaN(p))return;
-      await fetch(`${API}/admin/menu`,{
-        method:'POST',headers:{Authorization:tok,'Content-Type':'application/json'},
-        body:JSON.stringify({name:n,price:p,description:d})
+      let n = mName.value.trim(), p = parseFloat(mPrice.value), d = mDesc.value.trim();
+      if (!n || isNaN(p)) return;
+      await fetch(`${API}/admin/menu`, {
+        method: 'POST',
+        headers: {
+          Authorization: tok,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name: n, price: p, description: d })
       });
-      menuForm.reset(); loadMenu();
+      menuForm.reset();
+      loadMenu();
     };
-    // INITIAL LOAD
+
+    async function loadSummary() {
+      let r = await fetch(`${API}/admin/summary`, { headers: { Authorization: tok } });
+      let d = await r.json();
+      let html = `
+        <div class="kawaii-card p-3">
+          <h5>📊 Today's Summary</h5>
+          <div>Total Orders: ${d.totalOrders}</div>
+          <div>Served: ${d.totalServed}</div>
+          <div>Pending: ${d.totalPending}</div>
+          <div>Total Revenue: RM${d.totalRevenue.toFixed(2)}</div>
+          <div class="mt-2"><b>Top Items:</b><ul>
+            ${d.itemCounts.map(i => `<li>${i.item}: ${i.quantity}</li>`).join("")}
+          </ul></div>
+        </div>
+      `;
+      document.getElementById("summaryReport").innerHTML = html;
+    }
+
+    function logoutAdmin() {
+      localStorage.removeItem("admin-token");
+      location.href = "index.html";
+    }
+
     loadOrders();
   </script>
 </body>
