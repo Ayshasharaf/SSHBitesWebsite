@@ -6,37 +6,174 @@
   <title>🍔 SSSHBites Order</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <style>
-    body { font-family:'Poppins',sans-serif; background:linear-gradient(135deg,#fefcea 0,#ffe6fa 100%); }
-    .cute-card{background:#fffbe8;border-radius:16px;box-shadow:0 2px 10px #fae5d3;padding:1.4rem 1.2rem;margin-bottom:1.1rem;}
-    .menu-title{font-size:1.13rem;font-weight:600;color:#d35400;}
-    .price{color:#44bd32;font-weight:600;}
-    .btn-kawaii{background:#fdcb6e;color:#fff;border:none;border-radius:8px;font-weight:600;}
-    .btn-kawaii:hover{background:#e17055;}
-    .cart-card{background:#fffdfc;border-radius:16px;box-shadow:0 2px 10px #fae5d3;padding:1.2rem 1rem;}
-    .cart-row{display:flex;justify-content:space-between;align-items:center;font-size:1rem;border-bottom:1px dashed #f6e58d;padding:.35rem 0;}
-    .cart-del{background:#ffe6e6;border:none;border-radius:50%;color:#d63031;width:24px;height:24px;}
-    .cart-del:hover{background:#d63031;color:#fff;}
-    .order-success{background:#dff9fb;color:#22a6b3;border-radius:8px;padding:.6em 1em;text-align:center;font-weight:600;}
-    .admin-login{position:fixed;top:18px;right:24px;font-size:1rem;z-index:10;}
-    .admin-login button{background:#fffbe8;color:#d35400;border:none;border-radius:8px;padding:.4em 1.1em;font-weight:600;}
-    .admin-login button:hover{background:#fdcb6e;color:#fff;}
+    body {
+      min-height: 100vh;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #fef6f0 0%, #e7f3fd 100%);
+      color: #444;
+    }
+    .site-header {
+      font-size: 2.3rem;
+      font-weight: 800;
+      color: #ff9f43;
+      letter-spacing: 0.03em;
+      text-align: center;
+      margin-bottom: 0.2em;
+      margin-top: 0.3em;
+      text-shadow: 0 4px 24px #fff5e6;
+    }
+    .site-desc {
+      color: #8d8b8b;
+      text-align: center;
+      margin-bottom: 1.4rem;
+      font-size: 1.1rem;
+    }
+    .admin-login {
+      position: fixed;
+      top: 18px;
+      right: 24px;
+      font-size: 1rem;
+      z-index: 10;
+    }
+    .admin-login button {
+      background: #fff2e9;
+      color: #fd9644;
+      border: none;
+      border-radius: 9px;
+      padding: .42em 1.15em;
+      font-weight: 700;
+      box-shadow: 0 2px 8px #ffe3d0;
+      transition: background .18s;
+    }
+    .admin-login button:hover {
+      background: #fdcb6e;
+      color: #fff;
+    }
+    /* --- Menu Card --- */
+    #menuContainer {
+      max-height: 430px;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+      padding-right: 2px;
+      border-radius: 18px;
+      box-shadow: 0 2px 16px #ffe9d8;
+      background: #fffdfc;
+    }
+    .cute-card {
+      background: #fff3e0;
+      border-radius: 14px;
+      box-shadow: 0 1px 8px #ffecd2;
+      padding: 1.2rem 1.1rem;
+      margin-bottom: 1.1rem;
+      display: flex;
+      flex-direction: column;
+    }
+    .menu-title {
+      font-size: 1.16rem;
+      font-weight: 700;
+      color: #fd9644;
+      margin-bottom: .1em;
+    }
+    .price {
+      color: #44bd32;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: .6em;
+    }
+    .btn-kawaii {
+      background: linear-gradient(90deg, #fdcb6e 60%, #fd9644 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      min-width: 80px;
+      transition: background .18s, box-shadow .18s;
+      box-shadow: 0 2px 6px #ffe3d0;
+    }
+    .btn-kawaii:hover {
+      background: linear-gradient(90deg, #fd9644 30%, #fdcb6e 100%);
+      box-shadow: 0 4px 14px #ffe3d0;
+    }
+    input[type="number"] {
+      border-radius: 8px;
+      border: 1px solid #ffe1b9;
+      width: 54px;
+      margin-right: 0.7em;
+    }
+    /* --- Cart --- */
+    .cart-card {
+      background: #f5f9ff;
+      border-radius: 16px;
+      box-shadow: 0 2px 16px #e2eafc;
+      padding: 1.2rem 1rem;
+      position: sticky;
+      top: 18px;
+    }
+    .cart-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1rem;
+      border-bottom: 1px dashed #ffe7b1;
+      padding: .35rem 0;
+    }
+    .cart-row:last-child { border-bottom: none; }
+    .cart-del {
+      background: #ffe6e6;
+      border: none;
+      border-radius: 50%;
+      color: #d63031;
+      width: 24px;
+      height: 24px;
+      font-size: 1.15em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .16s, color .16s;
+    }
+    .cart-del:hover {
+      background: #d63031;
+      color: #fff;
+    }
+    .order-success {
+      background: #dff9fb;
+      color: #22a6b3;
+      border-radius: 10px;
+      padding: .7em 1.1em;
+      text-align: center;
+      font-weight: 700;
+      font-size: 1.1em;
+      margin: 1em auto 0 auto;
+      box-shadow: 0 1px 8px #d3f4f9;
+    }
+    /* --- Mobile tweaks --- */
+    @media (max-width: 600px) {
+      #menuContainer { max-height: 300px; }
+      .cart-card { top: 2px; }
+      .site-header { font-size: 1.6rem; }
+    }
+    /* --- Scrollbar for menu --- */
+    #menuContainer::-webkit-scrollbar { width: 8px; }
+    #menuContainer::-webkit-scrollbar-thumb { background: #ffe6fa; border-radius: 8px; }
   </style>
 </head>
 <body class="container py-3">
   <div class="admin-login"><button onclick="showAdminLogin()">👩‍💼 Admin</button></div>
-  <h2 class="text-center mb-2">🍔 SSSHBites 🍟</h2>
-  <div class="text-center mb-3" style="color:#636e72;">Pick your food, see your order below, and enjoy!</div>
-  <div class="mb-3" style="max-width:300px;margin:auto;">
-    <select class="form-select" id="tableNumber">
+  <div class="site-header">🍔 SSSHBites <span style="font-size:.85em;">🍟</span></div>
+  <div class="site-desc">Pick your favorite, review your order, and enjoy! <span style="font-size:1.1em;">✨</span></div>
+  <div class="mb-3" style="max-width:320px;margin:auto;">
+    <select class="form-select" id="tableNumber" style="border-radius:8px;">
       <option>Table 1</option><option>Table 2</option><option>Table 3</option>
     </select>
   </div>
   <div id="orderMsg"></div>
-  <div id="menu"></div>
+  <div id="menuContainer">
+    <div id="menu"></div>
+  </div>
   <div id="cartBox" class="cart-card mt-4" style="display:none;">
-    <div class="mb-2" style="font-weight:600;color:#d35400;">🛒 Your Order</div>
+    <div class="mb-2" style="font-weight:700;color:#fd9644;font-size:1.1em;">🛒 Your Order</div>
     <div id="cart"></div>
-    <div class="text-end mb-1">Total: <span id="total" class="price">0.00</span></div>
+    <div class="text-end mb-1" style="font-weight:700;">Total: <span id="total" class="price">0.00</span></div>
     <button class="btn btn-kawaii w-100" onclick="placeOrder()">Place Order</button>
   </div>
   <!-- Admin Login Modal -->
@@ -61,11 +198,11 @@
     fetch(API+'/menu').then(r=>r.json()).then(d=>{
       let h='';d.forEach(i=>{
         h+=`<div class="cute-card">
-          <div class="menu-title">${i.name}</div>
-          <div style="color:#636e72;">${i.description||''}</div>
+          <div class="menu-title">🍽 ${i.name}</div>
+          <div style="color:#888;font-size:.98em;margin-bottom:.35em;">${i.description||''}</div>
           <div class="mb-2 price">RM${i.price.toFixed(2)}</div>
-          <div class="d-flex align-items-center">
-            <input type="number" min="1" value="1" id="q${i.id}" style="width:50px;" class="form-control me-2"/>
+          <div class="d-flex align-items-center mt-2">
+            <input type="number" min="1" value="1" id="q${i.id}" class="form-control me-2"/>
             <button class="btn btn-kawaii" onclick="addItem(${i.id},'${i.name.replace(/'/g,"\\'")}',${i.price})">Add</button>
           </div>
         </div>`;
@@ -85,9 +222,9 @@
       c.innerHTML='';cart.forEach(i=>{
         let s=i.p*i.q;tot+=s;
         c.innerHTML+=`<div class="cart-row">
-          <span>${i.n} x${i.q}</span>
+          <span>${i.n} <span style="color:#888;">x${i.q}</span></span>
           <span>RM${s.toFixed(2)}</span>
-          <button class="cart-del" onclick="removeItem(${i.id})">✕</button>
+          <button class="cart-del" title="Remove" onclick="removeItem(${i.id})">✕</button>
         </div>`;
       });
       document.getElementById('total').textContent=tot.toFixed(2);
@@ -104,7 +241,7 @@
       .then(d=>{
         cart=[];showCart();
         document.getElementById('orderMsg').innerHTML=
-          `<div class="order-success">🎉 Order placed!</div>`;
+          `<div class="order-success">🎉 Order placed! Thank you!</div>`;
       });
     }
     // Admin login
