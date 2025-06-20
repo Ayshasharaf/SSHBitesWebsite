@@ -88,7 +88,7 @@
           <small>${items}</small><br>
           <div>RM${o.totalAmount.toFixed(2)} 
             <span class="order-badge ${o.status === 'Served' ? 'badge-served' : 'badge-pending'}">${o.status}</span>
-            ${o.status === 'Pending' ? `<button class="btn btn-warning btn-sm ms-2" onclick="markServed(${o.id})">Mark Served</button>` : ''}
+            ${o.status === 'Pending' ? `<button class="btn btn-warning btn-sm ms-2" onclick="markServed(${o.id})">Served</button>` : ''}
           </div>
           ${o.notes ? `<div><i>Note: ${o.notes}</i></div>` : ''}
           <div><small>🕒 ${new Date(o.orderDate).toLocaleString()}</small></div>
